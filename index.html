@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>بازی افعال عربی - محمد پارسا باباخانی</title>
+<style>
+body { font-family:'Tahoma',sans-serif; direction:rtl; text-align:center; margin:0; padding:0; background:linear-gradient(to bottom,#f0f7ff,#c2f0f0);}
+h1{margin-top:30px;color:#222;}
+.container{max-width:700px;margin:50px auto;background:#fff;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.2);padding:40px;transition:transform 0.3s ease;}
+.container:hover{transform:scale(1.02);}
+.sentence{font-size:1.7em;margin:30px 0;min-height:60px;color:#333;}
+.options button{padding:12px 25px;margin:12px;font-size:1em;cursor:pointer;border:none;border-radius:12px;transition:transform 0.2s,background-color 0.3s;background-color:#6a5acd;color:#fff;}
+.options button:hover{transform:scale(1.1);background-color:#483d8b;}
+.result{font-size:1.4em;margin:25px 0;min-height:40px;}
+#nextBtn,#startBtn,#restartBtn{padding:12px 25px;font-size:1.1em;cursor:pointer;border:none;border-radius:12px;background-color:#ff7f50;color:#fff;margin-top:20px;transition:background-color 0.3s, transform 0.2s;}
+#nextBtn:hover,#startBtn:hover,#restartBtn:hover{background-color:#ff4500;transform:scale(1.05);}
+.score-timer{display:flex;justify-content:space-between;margin-top:20px;font-size:1.3em;font-weight:bold;color:#333;}
+.correct{background-color:#4CAF50 !important;animation:pop 0.3s;}
+.wrong{background-color:#f44336 !important;animation:shake 0.3s;}
+@keyframes pop{0%{transform:scale(1);}50%{transform:scale(1.3);}100%{transform:scale(1);}}
+@keyframes shake{0%{transform:translateX(0);}25%{transform:translateX(-5px);}50%{transform:translateX(5px);}75%{transform:translateX(-5px);}100%{transform:translateX(0);}}
+</style>
+</head>
+<body>
+<h1>بازی افعال عربی - محمد پارسا باباخانی</h1>
+<div class="container" id="gameContainer" style="display:none;">
+  <div class="score-timer">
+    <div>امتیاز: <span id="score">0</span></div>
+    <div>زمان: <span id="timer">10</span> ثانیه</div>
+  </div>
+  <div class="sentence" id="sentence"></div>
+  <div class="options" id="options"></div>
+  <div class="result" id="result"></div>
+  <button id="nextBtn" onclick="nextSentence()" style="display:none;">جمله بعدی</button>
+  <button id="restartBtn" onclick="restartGame()" style="display:none;">شروع مجدد</button>
+</div>
+<div id="startScreen">
+  <h2>سازنده: محمد پارسا باباخانی</h2>
+  <button id="startBtn" onclick="startGame()">شروع بازی</button>
+</div>
+
+<audio id="correctSound">
+  <source src="https://freesound.org/data/previews/320/320181_5260875-lq.mp3" type="audio/mpeg">
+</audio>
+<audio id="wrongSound">
+  <source src="https://freesound.org/data/previews/331/331912_3248244-lq.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+// آرایه سوالات: ترکیبی از مضارع و ماضی، بعضی جاخالی بعضی کامل
+const sentences = [
+{ text:'هو ذهب إلى المدرسة.', correct:'ذهب', options:['ذهب','يذهب','يذهبون'] },
+{ text:'أنا كل يوم ____ الكتاب.', correct:'أقرأ', options:['قرأ','أقرأ','كنت أقرأ'] },
+{ text:'هم البارحة لعبوا كرة القدم.', correct:'لعبوا', options:['يلعبون','لعبوا','كانوا يلعبون'] },
+{ text:'أنت أمس ____ البيت.', correct:'ذهبت', options:['تذهب','ذهبت','كنت تذهب'] },
+{ text:'نحن كل يوم نمارس الرياضة.', correct:'نمارس', options:['مارسنا','نمارس','كنا نمارس'] },
+{ text:'هو الأسبوع الماضي شاهد فيلم.', correct:'شاهد', options:['يشاهد','شاهد','كان يشاهد'] },
+{ text:'أنا البارحة ____ طعاماً لذيذاً.', correct:'أكلت', options:['آكل','أكلت','كنت آكل'] },
+{ text:'أنت كل ليلة تقرأ الشعر.', correct:'تقرأ', options:['قرأت','تقرأ','كنت تقرأ'] },
+{ text:'هم البارحة إلى الحديقة ذهبوا.', correct:'ذهبوا', options:['يذهبون','ذهبوا','كانوا يذهبون'] },
+{ text:'أنا البارحة ____ الدرس.', correct:'قرأت', options:['أقرأ','قرأت','كنت أقرأ'] },
+{ text:'هو اليوم ____ الرياضة.', correct:'يمارس', options:['مارس','يمارس','كان يمارس'] },
+{ text:'أنت البارحة كتبت الرسالة.', correct:'كتبت', options:['تكتب','كتبت','كنت تكتب'] },
+{ text:'هم اليوم ____ اللعبة.', correct:'يلعبون', options:['لعبوا','يلعبون','كانوا يلعبون'] },
+{ text:'أنا الأسبوع الماضي ____ الكتاب.', correct:'قرأت', options:['أقرأ','قرأت','كنت أقرأ'] },
+{ text:'هو البارحة أكل الفاكهة.', correct:'أكل', options:['يأكل','أكل','كان يأكل'] },
+{ text:'أنت كل صباح تمارس الرياضة.', correct:'تمارس', options:['مارست','تمارس','كنت تمارس'] },
+{ text:'نحن البارحة ____ الفيلم.', correct:'شاهدنا', options:['نشاهد','شاهدنا','كنا نشاهد'] },
+{ text:'هم البارحة إلى المدرسة ____ .', correct:'ذهبوا', options:['يذهبون','ذهبوا','كانوا يذهبون'] },
+{ text:'أنا البارحة كتبت الرسالة.', correct:'كتبت', options:['أكتب','كتبت','كنت أكتب'] },
+{ text:'هو كل صباح يشرب القهوة.', correct:'يشرب', options:['شرب','يشرب','كان يشرب'] }
+];
+
+let current=0;
+let score=0;
+let timer;
+let timeLeft=10;
+
+// تابع برای جابجایی گزینه‌ها
+function shuffle(array){
+  for(let i=array.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [array[i],array[j]]=[array[j],array[i]];
+  }
+  return array;
+}
+
+function startGame(){
+  document.getElementById('startScreen').style.display='none';
+  document.getElementById('gameContainer').style.display='block';
+  score=0;
+  current=0;
+  document.getElementById('score').textContent=score;
+  showSentence();
+}
+
+function showSentence(){
+  const s=sentences[current];
+  document.getElementById('sentence').textContent=s.text;
+  const optionsDiv=document.getElementById('options');
+  optionsDiv.innerHTML='';
+  const shuffledOptions=shuffle([...s.options]);
+  shuffledOptions.forEach(opt=>{
+    const btn=document.createElement('button');
+    btn.textContent=opt;
+    btn.onclick=()=>checkAnswer(opt,btn);
+    optionsDiv.appendChild(btn);
+  });
+  document.getElementById('result').textContent='';
+  document.getElementById('nextBtn').style.display='none';
+  document.getElementById('restartBtn').style.display='none';
+  timeLeft=10;
+  document.getElementById('timer').textContent=timeLeft;
+  timer=setInterval(countdown,1000);
+}
+
+function countdown(){
+  timeLeft--;
+  document.getElementById('timer').textContent=timeLeft;
+  if(timeLeft<=0){
+    clearInterval(timer);
+    document.getElementById('result').textContent='زمان تمام شد ❌';
+    playSound('wrong');
+    document.getElementById('nextBtn').style.display='inline-block';
+  }
+}
+
+function checkAnswer(answer,button){
+  clearInterval(timer);
+  const s=sentences[current];
+  const result=document.getElementById('result');
+  if(answer===s.correct){
+    result.textContent='درست شد ✅';
+    score+=5;
+    button.classList.add('correct');
+    playSound('correct');
+  } else{
+    result.textContent='غلط ❌';
+    button.classList.add('wrong');
+    playSound('wrong');
+  }
+  document.getElementById('score').textContent=score;
+  document.getElementById('nextBtn').style.display='inline-block';
+}
+
+function playSound(type){
+  const correctSound=document.getElementById('correctSound');
+  const wrongSound=document.getElementById('wrongSound');
+  if(type==='correct'){ correctSound.currentTime=0; correctSound.play(); }
+  else{ wrongSound.currentTime=0; wrongSound.play(); }
+}
+
+function nextSentence(){
+  current++;
+  if(current>=sentences.length){ endGame(); }
+  else{ showSentence(); }
+}
+
+function endGame(){
+  document.getElementById('sentence').textContent='تبریک! بازی تمام شد 🎉';
+  document.getElementById('options').style.display='none';
+  document.getElementById('nextBtn').style.display='none';
+  document.getElementById('restartBtn').style.display='inline-block';
+  document.getElementById('result').textContent='امتیاز نهایی: '+score;
+}
+
+function restartGame(){
+  document.getElementById('options').style.display='block';
+  startGame();
+}
+</script>
+</body>
+</html>
