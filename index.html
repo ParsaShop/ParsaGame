@@ -40,13 +40,6 @@ h1{margin-top:30px;color:#222;}
   <button id="startBtn" onclick="startGame()">شروع بازی</button>
 </div>
 
-<audio id="correctSound">
-  <source src="https://freesound.org/data/previews/320/320181_5260875-lq.mp3" type="audio/mpeg">
-</audio>
-<audio id="wrongSound">
-  <source src="https://freesound.org/data/previews/331/331912_3248244-lq.mp3" type="audio/mpeg">
-</audio>
-
 <script>
 // آرایه سوالات: ترکیبی از مضارع و ماضی، بعضی جاخالی بعضی کامل
 const sentences = [
@@ -121,7 +114,6 @@ function countdown(){
   if(timeLeft<=0){
     clearInterval(timer);
     document.getElementById('result').textContent='زمان تمام شد ❌';
-    playSound('wrong');
     document.getElementById('nextBtn').style.display='inline-block';
   }
 }
@@ -134,21 +126,12 @@ function checkAnswer(answer,button){
     result.textContent='درست شد ✅';
     score+=5;
     button.classList.add('correct');
-    playSound('correct');
   } else{
     result.textContent='غلط ❌';
     button.classList.add('wrong');
-    playSound('wrong');
   }
   document.getElementById('score').textContent=score;
   document.getElementById('nextBtn').style.display='inline-block';
-}
-
-function playSound(type){
-  const correctSound=document.getElementById('correctSound');
-  const wrongSound=document.getElementById('wrongSound');
-  if(type==='correct'){ correctSound.currentTime=0; correctSound.play(); }
-  else{ wrongSound.currentTime=0; wrongSound.play(); }
 }
 
 function nextSentence(){
